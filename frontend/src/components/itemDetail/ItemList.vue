@@ -2,7 +2,7 @@
 <template>
 <v-container class="pa-2" fluid grid-list-md>
   <v-layout>
-    <v-flex>
+    <v-flex >
     <v-row>
       <b-button v-b-toggle.collapse-3 class="m-1">정렬방법</b-button>
       <b-collapse invisible id="collapse-3">
@@ -25,22 +25,23 @@
             :step="10000"
           />
     </v-row> -->
+    <carousel></carousel>
+    <v-flex wrap>
+      <v-row>
+        <itemListCard v-for="i in NowItems.length > length ? length :NowItems.length"
+          :key="i" :item="NowItems[i-1]" class="mt-1"/>
+      </v-row>
+    </v-flex>
     <v-row>
-      <carousel></carousel>
-    </v-row>
-    <v-row >
-      <itemListCard v-for="i in NowItems.length > length ? length :NowItems.length"
-        :key="i" :item="NowItems[i-1]" class="mt-1"/>
+      <!-- start : loadMore button 더 보기 버튼 -->
+      <v-col v-if="moreBtn">
+        <v-btn outlined @click = "loadMore">더보기</v-btn>
+      </v-col>
+      <!-- end : loadMore -->
     </v-row>
     </v-flex>
   </v-layout>
-  <v-btn
-    v-scroll="onScroll" v-show="fab"
-    fab dark fixed bottom right
-    color="primary" @click="toTop"
-  >
-    <v-icon>keyboard_arrow_up</v-icon>
-  </v-btn> 
+  
 </v-container>
 </template>
 
@@ -50,11 +51,12 @@ import 'vue-histogram-slider/dist/histogram-slider.css';
 
 export default {
   data: () => ({ 
+    moreBtn: true,      // 더보기버튼 출력
     NowItems : [],
     chartLP : 0,
     chartRP : 1000000,
-    length: 10,
-    fab: false,
+    length: 9,
+    
     selected: null,
     select :"",
     priceList : [],
@@ -67,15 +69,7 @@ export default {
     ]
   }),
   methods:{
-    onScroll (e) {  // 맨위로 이동
-      if (typeof window === 'undefined') return
-      const top = window.pageYOffset ||   e.target.scrollTop || 0
-      this.fab = top > 20
-    },
-    toTop () {      // 맨위좌표 기억
-      this.$vuetify.goTo(0)
-    },
-     itemLen() { // 검색된 데이터 정보 양 출력
+    itemLen() { // 검색된 데이터 정보 양 출력
       return "검색 결과 : " + this.NowItems.length + " 건";
     },
     sortyBy(action) { //select 된 정렬 방법 메소드 실행
@@ -109,6 +103,10 @@ export default {
         return new Date(a._source.date) - new Date(b._source.date); 
       });
     },
+    loadMore() {  // 더보기 버튼 
+      this.length += 9;
+      if (this.length >= this.itemList.length) this.moreBtn = false;
+    },
   },
   props :{ 
     itemList : { type: Array , default: () => new Array() },
@@ -117,7 +115,6 @@ export default {
   created() {
     this.NowItems = this.itemList;
     this.EventBus.$on("search", () => {this.selected =null; } )
-    
   },
   watch: {
     itemList :function(newVal, oldVal) {
